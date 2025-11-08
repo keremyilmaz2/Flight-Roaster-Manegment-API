@@ -1,5 +1,4 @@
-﻿using Flight_Roaster_Manegment_API.Models.Enums;
-using FlightRosterAPI.Models.Entities;
+﻿using FlightRosterAPI.Models.Entities;
 using FlightRosterAPI.Models.Enums;
 
 namespace FlightRosterAPI.Repositories.Interfaces

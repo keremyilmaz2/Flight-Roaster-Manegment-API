@@ -1,5 +1,4 @@
-﻿using Flight_Roaster_Manegment_API.Models.Enums;
-using FlightRosterAPI.Models.Enums;
+﻿using FlightRosterAPI.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace FlightRosterAPI.Models.DTOs.Seat

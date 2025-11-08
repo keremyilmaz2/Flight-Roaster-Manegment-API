@@ -1,6 +1,8 @@
-﻿namespace Flight_Roaster_Manegment_API.Models.Enums
+﻿namespace FlightRosterAPI.Models.Enums
 {
-    public class SeatClass
+    public enum SeatClass
     {
+        Economy = 1,
+        Business = 2
     }
 }
