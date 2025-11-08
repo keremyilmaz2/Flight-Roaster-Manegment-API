@@ -1,6 +1,8 @@
 ﻿using FlightRosterAPI.Data;
 using FlightRosterAPI.Models;
 using FlightRosterAPI.Models.Entities;
+using FlightRosterAPI.Repositories;
+using FlightRosterAPI.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -77,6 +79,17 @@ builder.Services.AddAuthorization(options =>
 
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
+
+// Register Repositories
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IAircraftRepository, AircraftRepository>();
+builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+builder.Services.AddScoped<IPilotRepository, PilotRepository>();
+builder.Services.AddScoped<ICabinCrewRepository, CabinCrewRepository>();
+builder.Services.AddScoped<IPassengerRepository, PassengerRepository>();
+builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+builder.Services.AddScoped<IFlightCrewRepository, FlightCrewRepository>();
+builder.Services.AddScoped<IFlightCabinCrewRepository, FlightCabinCrewRepository>();
 
 // CORS
 builder.Services.AddCors(options =>
