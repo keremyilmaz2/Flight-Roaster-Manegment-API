@@ -39,6 +39,7 @@ namespace FlightRosterAPI.Models.DTOs.Passenger
         public DateTime DateOfBirth { get; set; }
         public int Age { get; set; }
         public string? Nationality { get; set; }
+        public string? Gender { get; set; }
         public string? PassportNumber { get; set; }
         public string? NationalIdNumber { get; set; }
         public DateTime CreatedAt { get; set; }

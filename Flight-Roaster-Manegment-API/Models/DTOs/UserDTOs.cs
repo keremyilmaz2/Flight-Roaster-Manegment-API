@@ -34,6 +34,7 @@ namespace FlightRosterAPI.Models.DTOs.User
 
         [MaxLength(100)]
         public string? Nationality { get; set; }
+        public string? Gender { get; set; }
 
         [Required(ErrorMessage = "Doğum tarihi zorunludur")]
         public DateTime DateOfBirth { get; set; }
@@ -56,6 +57,7 @@ namespace FlightRosterAPI.Models.DTOs.User
 
         [MaxLength(100)]
         public string? Nationality { get; set; }
+        public string? Gender { get; set; }
 
         public DateTime? DateOfBirth { get; set; }
 
@@ -75,6 +77,7 @@ namespace FlightRosterAPI.Models.DTOs.User
         public string RoleName => Role.ToString();
         public string? PhoneNumber { get; set; }
         public string? Nationality { get; set; }
+        public string? Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
         public int Age => CalculateAge();
         public DateTime CreatedAt { get; set; }

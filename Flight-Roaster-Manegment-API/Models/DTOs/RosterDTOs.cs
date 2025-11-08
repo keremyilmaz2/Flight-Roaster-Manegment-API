@@ -117,6 +117,7 @@ namespace FlightRosterAPI.Models.DTOs.Roster
         public string FullName { get; set; } = string.Empty;
         public int Age { get; set; }
         public string? Nationality { get; set; }
+        public string? Gender { get; set; }
         public string SeatNumber { get; set; } = string.Empty;
         public string SeatClass { get; set; } = string.Empty;
         public bool IsInfant { get; set; }

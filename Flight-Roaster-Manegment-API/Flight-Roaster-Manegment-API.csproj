@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<!-- ASP.NET Core Identity -->
+		<PackageReference Include="Bogus" Version="35.6.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
 
 		<!-- Entity Framework Core -->

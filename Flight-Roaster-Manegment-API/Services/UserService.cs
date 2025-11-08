@@ -81,6 +81,7 @@ namespace FlightRosterAPI.Services
                 LastName = registerDto.LastName,
                 PhoneNumber = registerDto.PhoneNumber,
                 Nationality = registerDto.Nationality,
+                Gender = registerDto.Gender,
                 DateOfBirth = registerDto.DateOfBirth,
                 Role = registerDto.Role,
                 CreatedAt = DateTime.UtcNow,
@@ -181,6 +182,8 @@ namespace FlightRosterAPI.Services
 
             if (!string.IsNullOrEmpty(updateDto.Nationality))
                 user.Nationality = updateDto.Nationality;
+            if (!string.IsNullOrEmpty(updateDto.Gender))
+                user.Gender = updateDto.Gender;
 
             if (updateDto.DateOfBirth.HasValue)
                 user.DateOfBirth = updateDto.DateOfBirth.Value;
@@ -292,6 +295,7 @@ namespace FlightRosterAPI.Services
                 Role = user.Role,
                 PhoneNumber = user.PhoneNumber,
                 Nationality = user.Nationality,
+                Gender = user.Gender,
                 DateOfBirth = user.DateOfBirth,
                 CreatedAt = user.CreatedAt,
                 IsActive = user.IsActive

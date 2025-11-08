@@ -142,6 +142,7 @@ namespace FlightRosterAPI.Services
                 DateOfBirth = passenger.User.DateOfBirth,
                 Age = CalculateAge(passenger.User.DateOfBirth),
                 Nationality = passenger.User.Nationality,
+                Gender = passenger.User.Gender,
                 PassportNumber = passenger.PassportNumber,
                 NationalIdNumber = passenger.NationalIdNumber,
                 CreatedAt = passenger.CreatedAt,

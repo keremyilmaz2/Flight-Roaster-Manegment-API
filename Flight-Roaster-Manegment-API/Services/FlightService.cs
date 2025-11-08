@@ -313,6 +313,7 @@ namespace FlightRosterAPI.Services
                 FullName = s.Passenger.User.FullName,
                 Age = CalculateAge(s.Passenger.User.DateOfBirth),
                 Nationality = s.Passenger.User.Nationality,
+                Gender = s.Passenger.User.Gender,
                 SeatNumber = s.SeatNumber,
                 SeatClass = s.SeatClass.ToString(),
                 IsInfant = s.IsInfantSeat,

@@ -103,6 +103,8 @@ builder.Services.AddScoped<IPassengerService, PassengerService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
 builder.Services.AddScoped<IRosterService, RosterService>();
 
+builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -162,18 +164,22 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Flight Roster API V1");
-        c.RoutePrefix = string.Empty; // Swagger'ı root'ta aç
-    });
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI(c =>
+//    {
+//        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Flight Roster API V1");
+//        c.RoutePrefix = string.Empty; // Swagger'ı root'ta aç
+//    });
+//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseRouting();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
