@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Flight-Roaster-Manegment-API/Flight-Roaster-Manegment-API.csproj" />
+  <Project Path="FlightRosterManagement.Tests/FlightRosterManagement.Tests.csproj" />
 </Solution>
