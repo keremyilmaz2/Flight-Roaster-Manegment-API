@@ -333,11 +333,12 @@ public class AuthService
     {
         if (string.IsNullOrWhiteSpace(email))
             return false;
-
         try
         {
             var addr = new System.Net.Mail.MailAddress(email);
-            return addr.Address == email && email.Contains('.') && email.IndexOf('.') > email.IndexOf('@');
+            var atIndex = email.IndexOf('@');
+            return addr.Address == email &&
+                   email.LastIndexOf('.') > atIndex;  // LastIndexOf kullan
         }
         catch
         {
