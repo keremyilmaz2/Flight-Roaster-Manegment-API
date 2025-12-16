@@ -1,4 +1,5 @@
-﻿using FlightRosterAPI.Models.DTOs.Aircraft;
+﻿using FlightRosterAPI.Models;
+using FlightRosterAPI.Models.DTOs.Aircraft;
 using FlightRosterAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,236 +22,257 @@ namespace FlightRosterAPI.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Tüm uçakları getirir
-        /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<AircraftResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllAircrafts()
         {
+            var response = new ResponseDto();
             try
             {
                 var aircrafts = await _aircraftService.GetAllAircraftsAsync();
-                return Ok(aircrafts);
+                response.Result = aircrafts;
+                response.Message = "Uçaklar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving all aircrafts");
-                return StatusCode(500, new { message = "Uçaklar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçaklar getirilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Aktif uçakları getirir
-        /// </summary>
         [HttpGet("active")]
-        [ProducesResponseType(typeof(IEnumerable<AircraftResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActiveAircrafts()
         {
+            var response = new ResponseDto();
             try
             {
                 var aircrafts = await _aircraftService.GetActiveAircraftsAsync();
-                return Ok(aircrafts);
+                response.Result = aircrafts;
+                response.Message = "Aktif uçaklar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving active aircrafts");
-                return StatusCode(500, new { message = "Aktif uçaklar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Aktif uçaklar getirilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// ID'ye göre uçak getirir
-        /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(AircraftResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAircraftById(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 var aircraft = await _aircraftService.GetAircraftByIdAsync(id);
-                if (aircraft == null)
-                    return NotFound(new { message = "Uçak bulunamadı" });
 
-                return Ok(aircraft);
+                if (aircraft == null)
+                {
+                    response.IsSuccess = false;
+                    response.Message = $"ID {id} ile uçak bulunamadı";
+                    return NotFound(response);
+                }
+
+                response.Result = aircraft;
+                response.Message = "Uçak başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving aircraft {AircraftId}", id);
-                return StatusCode(500, new { message = "Uçak getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak getirilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Kayıt numarasına göre uçak getirir
-        /// </summary>
         [HttpGet("registration/{registrationNumber}")]
-        [ProducesResponseType(typeof(AircraftResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAircraftByRegistrationNumber(string registrationNumber)
         {
+            var response = new ResponseDto();
             try
             {
                 var aircraft = await _aircraftService.GetAircraftByRegistrationNumberAsync(registrationNumber);
-                if (aircraft == null)
-                    return NotFound(new { message = "Uçak bulunamadı" });
 
-                return Ok(aircraft);
+                if (aircraft == null)
+                {
+                    response.IsSuccess = false;
+                    response.Message = $"Kayıt numarası {registrationNumber} ile uçak bulunamadı";
+                    return NotFound(response);
+                }
+
+                response.Result = aircraft;
+                response.Message = "Uçak başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving aircraft by registration {RegistrationNumber}", registrationNumber);
-                return StatusCode(500, new { message = "Uçak getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak getirilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçak tipine göre uçakları getirir
-        /// </summary>
         [HttpGet("type/{aircraftType}")]
-        [ProducesResponseType(typeof(IEnumerable<AircraftResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAircraftsByType(string aircraftType)
         {
+            var response = new ResponseDto();
             try
             {
                 var aircrafts = await _aircraftService.GetAircraftsByTypeAsync(aircraftType);
-                return Ok(aircrafts);
+                response.Result = aircrafts;
+                response.Message = "Uçaklar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving aircrafts by type {AircraftType}", aircraftType);
-                return StatusCode(500, new { message = "Uçaklar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçaklar getirilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Yeni uçak oluşturur
-        /// </summary>
         [HttpPost]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(AircraftResponseDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateAircraft([FromBody] CreateAircraftDto createDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var aircraft = await _aircraftService.CreateAircraftAsync(createDto);
-                return CreatedAtAction(nameof(GetAircraftById), new { id = aircraft.AircraftId }, aircraft);
+                response.Result = aircraft;
+                response.Message = "Uçak başarıyla oluşturuldu";
+                return Ok(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating aircraft");
-                return StatusCode(500, new { message = "Uçak oluşturulurken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak oluşturulurken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçak bilgilerini günceller
-        /// </summary>
         [HttpPut("{id}")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(AircraftResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateAircraft(int id, [FromBody] UpdateAircraftDto updateDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var aircraft = await _aircraftService.UpdateAircraftAsync(id, updateDto);
-                return Ok(aircraft);
+                response.Result = aircraft;
+                response.Message = "Uçak başarıyla güncellendi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating aircraft {AircraftId}", id);
-                return StatusCode(500, new { message = "Uçak güncellenirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak güncellenirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçağı siler
-        /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteAircraft(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 await _aircraftService.DeleteAircraftAsync(id);
-                return NoContent();
+                response.Message = "Uçak başarıyla silindi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting aircraft {AircraftId}", id);
-                return StatusCode(500, new { message = "Uçak silinirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak silinirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçağı aktif eder
-        /// </summary>
         [HttpPatch("{id}/activate")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ActivateAircraft(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 await _aircraftService.ActivateAircraftAsync(id);
-                return Ok(new { message = "Uçak aktif edildi" });
+                response.Message = "Uçak başarıyla aktifleştirildi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error activating aircraft {AircraftId}", id);
-                return StatusCode(500, new { message = "Uçak aktif edilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak aktifleştirilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçağı pasif eder
-        /// </summary>
         [HttpPatch("{id}/deactivate")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeactivateAircraft(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 await _aircraftService.DeactivateAircraftAsync(id);
-                return Ok(new { message = "Uçak pasif edildi" });
+                response.Message = "Uçak başarıyla deaktif edildi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deactivating aircraft {AircraftId}", id);
-                return StatusCode(500, new { message = "Uçak pasif edilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uçak deaktif edilirken bir hata oluştu";
+                return StatusCode(500, response);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using FlightRosterAPI.Models.DTOs.CabinCrew;
+﻿using FlightRosterAPI.Models;
+using FlightRosterAPI.Models.DTOs.CabinCrew;
 using FlightRosterAPI.Models.Enums;
 using FlightRosterAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
@@ -25,130 +26,180 @@ namespace FlightRosterAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllCabinCrew()
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetAllCabinCrewAsync();
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving all cabin crew");
-                return StatusCode(500, new { message = "Kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("active")]
         public async Task<IActionResult> GetActiveCabinCrew()
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetActiveCabinCrewAsync();
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Aktif kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving active cabin crew");
-                return StatusCode(500, new { message = "Aktif kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Aktif kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCabinCrewById(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetCabinCrewByIdAsync(id);
                 if (cabinCrew == null)
-                    return NotFound(new { message = "Kabin ekibi bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Kabin ekibi bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving cabin crew {CabinCrewId}", id);
-                return StatusCode(500, new { message = "Kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetCabinCrewByUserId(int userId)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetCabinCrewByUserIdAsync(userId);
                 if (cabinCrew == null)
-                    return NotFound(new { message = "Kabin ekibi bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Kabin ekibi bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving cabin crew by user {UserId}", userId);
-                return StatusCode(500, new { message = "Kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("type/{crewType}")]
         public async Task<IActionResult> GetCabinCrewByType(CabinCrewType crewType)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetCabinCrewByTypeAsync(crewType);
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving cabin crew by type {CrewType}", crewType);
-                return StatusCode(500, new { message = "Kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("seniority/{seniority}")]
         public async Task<IActionResult> GetCabinCrewBySeniority(CabinCrewSeniority seniority)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetCabinCrewBySeniorityAsync(seniority);
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving cabin crew by seniority {Seniority}", seniority);
-                return StatusCode(500, new { message = "Kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("available-for-flight/{flightId}")]
         public async Task<IActionResult> GetAvailableCabinCrewForFlight(int flightId)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.GetAvailableCabinCrewForFlightAsync(flightId);
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Uygun kabin ekibi başarıyla getirildi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving available cabin crew for flight {FlightId}", flightId);
-                return StatusCode(500, new { message = "Uygun kabin ekibi getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uygun kabin ekibi getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
         [HttpGet("chefs-with-recipes")]
         public async Task<IActionResult> GetChefsWithRecipes()
         {
+            var response = new ResponseDto();
             try
             {
                 var chefs = await _cabinCrewService.GetChefsWithRecipesAsync();
-                return Ok(chefs);
+                response.Result = chefs;
+                response.Message = "Aşçılar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving chefs with recipes");
-                return StatusCode(500, new { message = "Aşçılar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Aşçılar getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
@@ -156,19 +207,26 @@ namespace FlightRosterAPI.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> CreateCabinCrew([FromBody] CreateCabinCrewDto createDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.CreateCabinCrewAsync(createDto);
-                return CreatedAtAction(nameof(GetCabinCrewById), new { id = cabinCrew.CabinCrewId }, cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla oluşturuldu";
+                return Ok(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating cabin crew");
-                return StatusCode(500, new { message = "Kabin ekibi oluşturulurken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi oluşturulurken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
@@ -176,23 +234,32 @@ namespace FlightRosterAPI.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateCabinCrew(int id, [FromBody] UpdateCabinCrewDto updateDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var cabinCrew = await _cabinCrewService.UpdateCabinCrewAsync(id, updateDto);
-                return Ok(cabinCrew);
+                response.Result = cabinCrew;
+                response.Message = "Kabin ekibi başarıyla güncellendi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating cabin crew {CabinCrewId}", id);
-                return StatusCode(500, new { message = "Kabin ekibi güncellenirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi güncellenirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
@@ -200,19 +267,25 @@ namespace FlightRosterAPI.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteCabinCrew(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 await _cabinCrewService.DeleteCabinCrewAsync(id);
-                return NoContent();
+                response.Message = "Kabin ekibi başarıyla silindi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting cabin crew {CabinCrewId}", id);
-                return StatusCode(500, new { message = "Kabin ekibi silinirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi silinirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
     }

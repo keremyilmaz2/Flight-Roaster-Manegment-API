@@ -1,4 +1,5 @@
-﻿using FlightRosterAPI.Models.DTOs.Roster;
+﻿using FlightRosterAPI.Models;
+using FlightRosterAPI.Models.DTOs.Roster;
 using FlightRosterAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,233 +20,261 @@ namespace FlightRosterAPI.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Uçuş ID'sine göre tam roster bilgisini getirir
-        /// </summary>
         [HttpGet("flight/{flightId}")]
-        [ProducesResponseType(typeof(FlightRosterResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetFlightRoster(int flightId)
         {
+            var response = new ResponseDto();
             try
             {
                 var roster = await _rosterService.GetFlightRosterAsync(flightId);
                 if (roster == null)
-                    return NotFound(new { message = "Uçuş bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Uçuş bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(roster);
+                response.Result = roster;
+                response.Message = "Roster bilgisi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving flight roster for flight {FlightId}", flightId);
-                return StatusCode(500, new { message = "Roster bilgisi alınırken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Roster bilgisi alınırken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuş numarasına göre roster bilgisini getirir
-        /// </summary>
         [HttpGet("flight-number/{flightNumber}")]
-        [ProducesResponseType(typeof(FlightRosterResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetFlightRosterByNumber(string flightNumber)
         {
+            var response = new ResponseDto();
             try
             {
                 var roster = await _rosterService.GetFlightRosterByFlightNumberAsync(flightNumber);
                 if (roster == null)
-                    return NotFound(new { message = "Uçuş bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Uçuş bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(roster);
+                response.Result = roster;
+                response.Message = "Roster bilgisi başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving flight roster for flight number {FlightNumber}", flightNumber);
-                return StatusCode(500, new { message = "Roster bilgisi alınırken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Roster bilgisi alınırken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuşa manuel olarak pilot atar
-        /// </summary>
         [HttpPost("assign-pilot")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(FlightCrewResponseDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AssignPilot([FromBody] AssignFlightCrewDto assignDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var result = await _rosterService.AssignPilotToFlightAsync(assignDto);
-                return CreatedAtAction(nameof(GetFlightRoster), new { flightId = assignDto.FlightId }, result);
+                response.Result = result;
+                response.Message = "Pilot başarıyla atandı";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error assigning pilot to flight");
-                return StatusCode(500, new { message = "Pilot atama sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot atama sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuşa manuel olarak kabin ekibi atar
-        /// </summary>
         [HttpPost("assign-cabin-crew")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(FlightCabinCrewResponseDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AssignCabinCrew([FromBody] AssignCabinCrewDto assignDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var result = await _rosterService.AssignCabinCrewToFlightAsync(assignDto);
-                return CreatedAtAction(nameof(GetFlightRoster), new { flightId = assignDto.FlightId }, result);
+                response.Result = result;
+                response.Message = "Kabin ekibi başarıyla atandı";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error assigning cabin crew to flight");
-                return StatusCode(500, new { message = "Kabin ekibi atama sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi atama sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuştan pilot çıkarır
-        /// </summary>
         [HttpDelete("remove-pilot/{flightId}/{pilotId}")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemovePilot(int flightId, int pilotId)
         {
+            var response = new ResponseDto();
             try
             {
-                var result = await _rosterService.RemovePilotFromFlightAsync(flightId, pilotId);
-                return NoContent();
+                await _rosterService.RemovePilotFromFlightAsync(flightId, pilotId);
+                response.Message = "Pilot başarıyla çıkarıldı";
+                return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error removing pilot from flight");
-                return StatusCode(500, new { message = "Pilot çıkarma sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot çıkarma sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuştan kabin ekibi çıkarır
-        /// </summary>
         [HttpDelete("remove-cabin-crew/{flightId}/{cabinCrewId}")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveCabinCrew(int flightId, int cabinCrewId)
         {
+            var response = new ResponseDto();
             try
             {
-                var result = await _rosterService.RemoveCabinCrewFromFlightAsync(flightId, cabinCrewId);
-                return NoContent();
+                await _rosterService.RemoveCabinCrewFromFlightAsync(flightId, cabinCrewId);
+                response.Message = "Kabin ekibi başarıyla çıkarıldı";
+                return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error removing cabin crew from flight");
-                return StatusCode(500, new { message = "Kabin ekibi çıkarma sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Kabin ekibi çıkarma sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuş ekibini otomatik atar (pilot ve/veya kabin ekibi)
-        /// </summary>
         [HttpPost("auto-assign")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(FlightRosterResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> AutoAssignCrew([FromBody] AutoAssignCrewDto autoAssignDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var result = await _rosterService.AutoAssignCrewAsync(autoAssignDto);
-                return Ok(result);
+                response.Result = result;
+                response.Message = "Ekip otomatik olarak atandı";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during auto-assignment");
-                return StatusCode(500, new { message = "Otomatik atama sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Otomatik atama sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuş ekibinin geçerliliğini kontrol eder
-        /// </summary>
         [HttpGet("validate/{flightId}")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         public async Task<IActionResult> ValidateFlightCrew(int flightId)
         {
+            var response = new ResponseDto();
             try
             {
                 var isValid = await _rosterService.ValidateFlightCrewAsync(flightId);
-                return Ok(new { isValid, message = isValid ? "Ekip geçerli" : "Ekip geçersiz" });
+                response.Result = new { isValid };
+                response.Message = isValid ? "Ekip geçerli" : "Ekip geçersiz";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating flight crew");
-                return StatusCode(500, new { message = "Doğrulama sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Doğrulama sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Roster bilgisini JSON formatında dışa aktarır
-        /// </summary>
         [HttpGet("export/json/{flightId}")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ExportToJson(int flightId)
         {
+            var response = new ResponseDto();
             try
             {
                 var json = await _rosterService.ExportRosterToJsonAsync(flightId);
-                return Content(json, "application/json");
+                response.Result = json;
+                response.Message = "JSON başarıyla oluşturuldu";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error exporting roster to JSON");
-                return StatusCode(500, new { message = "JSON dışa aktarma sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "JSON dışa aktarma sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Roster bilgisini PDF formatında dışa aktarır
-        /// </summary>
         [HttpGet("export/pdf/{flightId}")]
-        [ProducesResponseType(typeof(byte[]), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status501NotImplemented)]
         public async Task<IActionResult> ExportToPdf(int flightId)
         {
+            var response = new ResponseDto();
             try
             {
                 var pdf = await _rosterService.ExportRosterToPdfAsync(flightId);
@@ -253,16 +282,22 @@ namespace FlightRosterAPI.Controllers
             }
             catch (NotImplementedException)
             {
-                return StatusCode(501, new { message = "PDF dışa aktarma özelliği henüz eklenmedi" });
+                response.IsSuccess = false;
+                response.Message = "PDF dışa aktarma özelliği henüz eklenmedi";
+                return StatusCode(501, response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error exporting roster to PDF");
-                return StatusCode(500, new { message = "PDF dışa aktarma sırasında hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "PDF dışa aktarma sırasında hata oluştu";
+                return StatusCode(500, response);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using FlightRosterAPI.Models.DTOs.Pilot;
+﻿using FlightRosterAPI.Models;
+using FlightRosterAPI.Models.DTOs.Pilot;
 using FlightRosterAPI.Models.Enums;
 using FlightRosterAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
@@ -22,253 +23,277 @@ namespace FlightRosterAPI.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Tüm pilotları getirir
-        /// </summary>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<PilotResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllPilots()
         {
+            var response = new ResponseDto();
             try
             {
                 var pilots = await _pilotService.GetAllPilotsAsync();
-                return Ok(pilots);
+                response.Result = pilots;
+                response.Message = "Pilotlar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving all pilots");
-                return StatusCode(500, new { message = "Pilotlar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilotlar getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Aktif pilotları getirir
-        /// </summary>
         [HttpGet("active")]
-        [ProducesResponseType(typeof(IEnumerable<PilotResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetActivePilots()
         {
+            var response = new ResponseDto();
             try
             {
                 var pilots = await _pilotService.GetActivePilotsAsync();
-                return Ok(pilots);
+                response.Result = pilots;
+                response.Message = "Aktif pilotlar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving active pilots");
-                return StatusCode(500, new { message = "Aktif pilotlar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Aktif pilotlar getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// ID'ye göre pilot getirir
-        /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(PilotResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetPilotById(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilot = await _pilotService.GetPilotByIdAsync(id);
                 if (pilot == null)
-                    return NotFound(new { message = "Pilot bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Pilot bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(pilot);
+                response.Result = pilot;
+                response.Message = "Pilot başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving pilot {PilotId}", id);
-                return StatusCode(500, new { message = "Pilot getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Kullanıcı ID'sine göre pilot getirir
-        /// </summary>
         [HttpGet("user/{userId}")]
-        [ProducesResponseType(typeof(PilotResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetPilotByUserId(int userId)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilot = await _pilotService.GetPilotByUserIdAsync(userId);
                 if (pilot == null)
-                    return NotFound(new { message = "Pilot bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Pilot bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(pilot);
+                response.Result = pilot;
+                response.Message = "Pilot başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving pilot by user {UserId}", userId);
-                return StatusCode(500, new { message = "Pilot getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Lisans numarasına göre pilot getirir
-        /// </summary>
         [HttpGet("license/{licenseNumber}")]
-        [ProducesResponseType(typeof(PilotResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetPilotByLicenseNumber(string licenseNumber)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilot = await _pilotService.GetPilotByLicenseNumberAsync(licenseNumber);
                 if (pilot == null)
-                    return NotFound(new { message = "Pilot bulunamadı" });
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Pilot bulunamadı";
+                    return NotFound(response);
+                }
 
-                return Ok(pilot);
+                response.Result = pilot;
+                response.Message = "Pilot başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving pilot by license {LicenseNumber}", licenseNumber);
-                return StatusCode(500, new { message = "Pilot getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Kıdeme göre pilotları getirir
-        /// </summary>
         [HttpGet("seniority/{seniority}")]
-        [ProducesResponseType(typeof(IEnumerable<PilotResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPilotsBySeniority(PilotSeniority seniority)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilots = await _pilotService.GetPilotsBySeniorityAsync(seniority);
-                return Ok(pilots);
+                response.Result = pilots;
+                response.Message = "Pilotlar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving pilots by seniority {Seniority}", seniority);
-                return StatusCode(500, new { message = "Pilotlar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilotlar getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Uçuş için uygun pilotları getirir
-        /// </summary>
         [HttpGet("available-for-flight/{flightId}")]
-        [ProducesResponseType(typeof(IEnumerable<PilotResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAvailablePilotsForFlight(int flightId)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilots = await _pilotService.GetAvailablePilotsForFlightAsync(flightId);
-                return Ok(pilots);
+                response.Result = pilots;
+                response.Message = "Uygun pilotlar başarıyla getirildi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving available pilots for flight {FlightId}", flightId);
-                return StatusCode(500, new { message = "Uygun pilotlar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Uygun pilotlar getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Lisansı süresi dolmuş pilotları getirir
-        /// </summary>
         [HttpGet("expired-licenses")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(IEnumerable<PilotResponseDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPilotsWithExpiredLicenses()
         {
+            var response = new ResponseDto();
             try
             {
                 var pilots = await _pilotService.GetPilotsWithExpiredLicensesAsync();
-                return Ok(pilots);
+                response.Result = pilots;
+                response.Message = "Lisansı dolmuş pilotlar başarıyla getirildi";
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving pilots with expired licenses");
-                return StatusCode(500, new { message = "Lisansı dolmuş pilotlar getirilirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Lisansı dolmuş pilotlar getirilirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Yeni pilot oluşturur
-        /// </summary>
         [HttpPost]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(PilotResponseDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreatePilot([FromBody] CreatePilotDto createDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilot = await _pilotService.CreatePilotAsync(createDto);
-                return CreatedAtAction(nameof(GetPilotById), new { id = pilot.PilotId }, pilot);
+                response.Result = pilot;
+                response.Message = "Pilot başarıyla oluşturuldu";
+                return Ok(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating pilot");
-                return StatusCode(500, new { message = "Pilot oluşturulurken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot oluşturulurken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Pilot bilgilerini günceller
-        /// </summary>
         [HttpPut("{id}")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(typeof(PilotResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdatePilot(int id, [FromBody] UpdatePilotDto updateDto)
         {
+            var response = new ResponseDto();
             try
             {
                 var pilot = await _pilotService.UpdatePilotAsync(id, updateDto);
-                return Ok(pilot);
+                response.Result = pilot;
+                response.Message = "Pilot başarıyla güncellendi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating pilot {PilotId}", id);
-                return StatusCode(500, new { message = "Pilot güncellenirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot güncellenirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
 
-        /// <summary>
-        /// Pilotu siler
-        /// </summary>
         [HttpDelete("{id}")]
         [Authorize(Policy = "AdminOnly")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeletePilot(int id)
         {
+            var response = new ResponseDto();
             try
             {
                 await _pilotService.DeletePilotAsync(id);
-                return NoContent();
+                response.Message = "Pilot başarıyla silindi";
+                return Ok(response);
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting pilot {PilotId}", id);
-                return StatusCode(500, new { message = "Pilot silinirken hata oluştu" });
+                response.IsSuccess = false;
+                response.Message = "Pilot silinirken hata oluştu";
+                return StatusCode(500, response);
             }
         }
     }
