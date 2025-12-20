@@ -45,12 +45,21 @@ namespace FlightRosterAPI.Models.DTOs.Seat
         public bool? IsOccupied { get; set; }
     }
 
+    // Models/DTOs/Seat/BookSeatForSelfDto.cs
+    public class BookSeatForSelfDto
+    {
+        public bool IsInfantSeat { get; set; } = false;
+        public int? ParentPassengerId { get; set; }
+    }
+
     // Response DTO
     public class SeatResponseDto
     {
         public int SeatId { get; set; }
         public int FlightId { get; set; }
         public string FlightNumber { get; set; } = string.Empty;
+        // ✅ Detaylı Flight Bilgileri Eklendi
+        public FlightInfoDto? FlightInfo { get; set; }
         public int? PassengerId { get; set; }
         public string? PassengerName { get; set; }
         public string SeatNumber { get; set; } = string.Empty;
@@ -64,7 +73,44 @@ namespace FlightRosterAPI.Models.DTOs.Seat
         public DateTime CreatedAt { get; set; }
     }
 
-    // Seat Map Response (Uçak koltuk planı için)
+    // Models/DTOs/Seat/FlightInfoDto.cs
+    public class FlightInfoDto
+    {
+        public int FlightId { get; set; }
+        public string FlightNumber { get; set; } = string.Empty;
+
+        // Kalkış Bilgileri
+        public string DepartureCountry { get; set; } = string.Empty;
+        public string DepartureCity { get; set; } = string.Empty;
+        public string DepartureAirport { get; set; } = string.Empty;
+        public string DepartureAirportCode { get; set; } = string.Empty;
+        public DateTime DepartureTime { get; set; }
+
+        // Varış Bilgileri
+        public string ArrivalCountry { get; set; } = string.Empty;
+        public string ArrivalCity { get; set; } = string.Empty;
+        public string ArrivalAirport { get; set; } = string.Empty;
+        public string ArrivalAirportCode { get; set; } = string.Empty;
+        public DateTime ArrivalTime { get; set; }
+
+        // Uçuş Detayları
+        public int DurationMinutes { get; set; }
+        public string DurationText { get; set; } = string.Empty;
+        public double DistanceKm { get; set; }
+
+        // Aircraft Bilgileri
+        public string? AircraftType { get; set; }
+        public string? AircraftRegistration { get; set; }
+
+        // Code Share
+        public string? CodeShareFlightNumber { get; set; }
+        public string? CodeShareAirline { get; set; }
+
+        // Computed Properties
+        public string RouteText { get; set; } = string.Empty; // "IST → JFK"
+        public bool IsDeparted { get; set; }
+        public bool IsCompleted { get; set; }
+    }
     public class SeatMapResponseDto
     {
         public int FlightId { get; set; }

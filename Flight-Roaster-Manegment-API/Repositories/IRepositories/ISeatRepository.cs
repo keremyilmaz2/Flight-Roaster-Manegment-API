@@ -7,6 +7,8 @@ namespace FlightRosterAPI.Repositories.Interfaces
     {
         Task<Seat?> GetSeatWithDetailsAsync(int seatId);
         Task<IEnumerable<Seat>> GetSeatsByFlightAsync(int flightId);
+        Task<IEnumerable<Seat>> GetSeatsByPassengerAsync(int passengerId);
+
         Task<IEnumerable<Seat>> GetAvailableSeatsByFlightAsync(int flightId);
         Task<IEnumerable<Seat>> GetOccupiedSeatsByFlightAsync(int flightId);
         Task<Seat?> GetSeatByFlightAndSeatNumberAsync(int flightId, string seatNumber);

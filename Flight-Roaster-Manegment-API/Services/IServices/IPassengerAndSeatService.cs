@@ -28,5 +28,6 @@ namespace FlightRosterAPI.Services.IServices
         Task<bool> DeleteSeatAsync(int seatId);
         Task<bool> AutoAssignSeatsAsync(int flightId);
         Task<bool> GenerateSeatsForFlightAsync(int flightId);
+        Task<IEnumerable<SeatResponseDto>> GetSeatsByPassengerAsync(int passengerId);
     }
 }

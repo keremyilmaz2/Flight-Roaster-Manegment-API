@@ -211,6 +211,12 @@ namespace FlightRosterAPI.Services
             return seats.Select(MapToResponseDto);
         }
 
+        public async Task<IEnumerable<SeatResponseDto>> GetSeatsByPassengerAsync(int passengerId)
+        {
+            var seats = await _seatRepository.GetSeatsByPassengerAsync(passengerId);
+            return seats.Select(MapToResponseDto);
+        }
+
         public async Task<IEnumerable<SeatResponseDto>> GetSeatsByClassAsync(int flightId, SeatClass seatClass)
         {
             var seats = await _seatRepository.GetSeatsByClassAsync(flightId, seatClass);
@@ -436,6 +442,8 @@ namespace FlightRosterAPI.Services
             return true;
         }
 
+        // Services/SeatService.cs içinde
+
         private SeatResponseDto MapToResponseDto(Seat seat)
         {
             return new SeatResponseDto
@@ -443,6 +451,10 @@ namespace FlightRosterAPI.Services
                 SeatId = seat.SeatId,
                 FlightId = seat.FlightId,
                 FlightNumber = seat.Flight?.FlightNumber ?? string.Empty,
+
+                // ✅ Detaylı Flight Bilgileri
+                FlightInfo = seat.Flight != null ? MapToFlightInfoDto(seat.Flight) : null,
+
                 PassengerId = seat.PassengerId,
                 PassengerName = seat.Passenger?.User.FullName,
                 SeatNumber = seat.SeatNumber,
@@ -454,6 +466,66 @@ namespace FlightRosterAPI.Services
                 BookedAt = seat.BookedAt,
                 CreatedAt = seat.CreatedAt
             };
+        }
+
+        // Services/SeatService.cs içinde
+
+        private FlightInfoDto MapToFlightInfoDto(Flight flight)
+        {
+            var now = DateTime.UtcNow;
+
+            return new FlightInfoDto
+            {
+                FlightId = flight.FlightId,
+                FlightNumber = flight.FlightNumber,
+
+                // Kalkış
+                DepartureCountry = flight.DepartureCountry,
+                DepartureCity = flight.DepartureCity,
+                DepartureAirport = flight.DepartureAirport,
+                DepartureAirportCode = flight.DepartureAirportCode,
+                DepartureTime = flight.DepartureTime,
+
+                // Varış
+                ArrivalCountry = flight.ArrivalCountry,
+                ArrivalCity = flight.ArrivalCity,
+                ArrivalAirport = flight.ArrivalAirport,
+                ArrivalAirportCode = flight.ArrivalAirportCode,
+                ArrivalTime = flight.ArrivalTime,
+
+                // Detaylar
+                DurationMinutes = flight.DurationMinutes,
+                DurationText = FormatDuration(flight.DurationMinutes),
+                DistanceKm = flight.DistanceKm,
+
+                // Aircraft
+                AircraftType = flight.Aircraft?.AircraftType,
+                AircraftRegistration = flight.Aircraft?.RegistrationNumber,
+
+                // Code Share
+                CodeShareFlightNumber = flight.CodeShareFlightNumber,
+                CodeShareAirline = flight.CodeShareAirline,
+
+                // Computed
+                RouteText = $"{flight.DepartureAirportCode} → {flight.ArrivalAirportCode}",
+                IsDeparted = flight.DepartureTime <= now,
+                IsCompleted = flight.ArrivalTime <= now
+            };
+        }
+
+        // Duration Formatter
+        private string FormatDuration(int durationMinutes)
+        {
+            var hours = durationMinutes / 60;
+            var minutes = durationMinutes % 60;
+
+            if (hours == 0)
+                return $"{minutes}dk";
+
+            if (minutes == 0)
+                return $"{hours}s";
+
+            return $"{hours}s {minutes}dk";
         }
     }
 }

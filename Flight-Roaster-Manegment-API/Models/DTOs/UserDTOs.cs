@@ -38,6 +38,9 @@ namespace FlightRosterAPI.Models.DTOs.User
 
         [Required(ErrorMessage = "Doğum tarihi zorunludur")]
         public DateTime DateOfBirth { get; set; }
+
+        public string? PassportNumber { get; set; }
+        public string? NationalIdNumber { get; set; }
     }
 
     // Update DTO

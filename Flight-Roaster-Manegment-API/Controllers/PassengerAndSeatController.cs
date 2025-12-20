@@ -2,9 +2,11 @@
 using FlightRosterAPI.Models.DTOs.Passenger;
 using FlightRosterAPI.Models.DTOs.Seat;
 using FlightRosterAPI.Models.Enums;
+using FlightRosterAPI.Services;
 using FlightRosterAPI.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FlightRosterAPI.Controllers
 {
@@ -166,7 +168,6 @@ namespace FlightRosterAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdatePassenger(int id, [FromBody] UpdatePassengerDto updateDto)
         {
             var response = new ResponseDto();
@@ -231,13 +232,16 @@ namespace FlightRosterAPI.Controllers
     public class SeatsController : ControllerBase
     {
         private readonly ISeatService _seatService;
+        private readonly IPassengerService _passengerService;
         private readonly ILogger<SeatsController> _logger;
 
         public SeatsController(
             ISeatService seatService,
+            IPassengerService passengerService,
             ILogger<SeatsController> logger)
         {
             _seatService = seatService;
+            _passengerService = passengerService;
             _logger = logger;
         }
 
@@ -368,6 +372,122 @@ namespace FlightRosterAPI.Controllers
             }
         }
 
+        // Controllers/SeatsController.cs
+
+        [HttpGet("my-seats")]
+        public async Task<IActionResult> GetMySeats([FromQuery] bool includeCompleted = true)
+        {
+            var response = new ResponseDto();
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Kullanıcı kimliği bulunamadı";
+                    return Unauthorized(response);
+                }
+
+                int userId = int.Parse(userIdClaim.Value);
+                var passenger = await _passengerService.GetPassengerByUserIdAsync(userId);
+
+                if (passenger == null)
+                {
+                    response.Result = new List<SeatResponseDto>();
+                    response.Message = "Henüz yolcu kaydınız yok";
+                    return Ok(response);
+                }
+
+                var seats = await _seatService.GetSeatsByPassengerAsync(passenger.PassengerId);
+
+                // ✅ Tamamlanmış uçuşları filtrele (isteğe bağlı)
+                if (!includeCompleted)
+                {
+                    var now = DateTime.UtcNow;
+                    seats = seats.Where(s => s.FlightInfo != null && s.FlightInfo.ArrivalTime > now);
+                }
+
+                response.Result = seats;
+                response.Message = includeCompleted
+                    ? "Tüm rezervasyonlarınız başarıyla getirildi"
+                    : "Aktif rezervasyonlarınız başarıyla getirildi";
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user's seats");
+                response.IsSuccess = false;
+                response.Message = "Rezervasyonlar getirilirken hata oluştu";
+                return StatusCode(500, response);
+            }
+        }
+
+        // ✅ Bonus: Rezervasyon Özeti
+        [HttpGet("my-seats-summary")]
+        public async Task<IActionResult> GetMySeatsSummary()
+        {
+            var response = new ResponseDto();
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Kullanıcı kimliği bulunamadı";
+                    return Unauthorized(response);
+                }
+
+                int userId = int.Parse(userIdClaim.Value);
+                var passenger = await _passengerService.GetPassengerByUserIdAsync(userId);
+
+                if (passenger == null)
+                {
+                    response.Result = new { Upcoming = new List<SeatResponseDto>(), Completed = new List<SeatResponseDto>() };
+                    return Ok(response);
+                }
+
+                var allSeats = await _seatService.GetSeatsByPassengerAsync(passenger.PassengerId);
+                var now = DateTime.UtcNow;
+
+                var upcoming = allSeats
+                    .Where(s => s.FlightInfo != null && s.FlightInfo.ArrivalTime > now)
+                    .OrderBy(s => s.FlightInfo!.DepartureTime)
+                    .ToList();
+
+                var completed = allSeats
+                    .Where(s => s.FlightInfo != null && s.FlightInfo.ArrivalTime <= now)
+                    .OrderByDescending(s => s.FlightInfo!.DepartureTime)
+                    .ToList();
+
+                response.Result = new
+                {
+                    Upcoming = upcoming,
+                    Completed = completed,
+                    Statistics = new
+                    {
+                        TotalFlights = allSeats.Count(),
+                        UpcomingFlights = upcoming.Count,
+                        CompletedFlights = completed.Count,
+                        TotalDistanceKm = allSeats.Sum(s => s.FlightInfo?.DistanceKm ?? 0),
+                        TotalFlightTimeMinutes = allSeats.Sum(s => s.FlightInfo?.DurationMinutes ?? 0),
+                        BusinessClassSeats = allSeats.Count(s => s.SeatClass == SeatClass.Business),
+                        EconomyClassSeats = allSeats.Count(s => s.SeatClass == SeatClass.Economy)
+                    }
+                };
+
+                response.Message = "Rezervasyon özeti başarıyla getirildi";
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving seats summary");
+                response.IsSuccess = false;
+                response.Message = "Rezervasyon özeti getirilirken hata oluştu";
+                return StatusCode(500, response);
+            }
+        }
+
+
         [HttpPost("{id}/book")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> BookSeat(int id, [FromBody] BookSeatDto bookDto)
@@ -464,6 +584,68 @@ namespace FlightRosterAPI.Controllers
                 return StatusCode(500, response);
             }
         }
+
+        [HttpPost("{id}/book-self")]
+        [Authorize] // Sadece giriş yapmış kullanıcılar
+        public async Task<IActionResult> BookSeatForSelf(int id, [FromBody] BookSeatForSelfDto bookDto)
+        {
+            var response = new ResponseDto();
+            try
+            {
+                // JWT token'dan kullanıcı ID'sini al
+                var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null)
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Kullanıcı kimliği bulunamadı";
+                    return Unauthorized(response);
+                }
+
+                int userId = int.Parse(userIdClaim.Value);
+
+                // Kullanıcının passenger kaydını bul
+                var passenger = await _passengerService.GetPassengerByUserIdAsync(userId);
+                if (passenger == null)
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Yolcu kaydınız bulunamadı";
+                    return NotFound(response);
+                }
+
+                // Koltuk rezervasyonu yap
+                var bookSeatDto = new BookSeatDto
+                {
+                    PassengerId = passenger.PassengerId,
+                    IsInfantSeat = bookDto.IsInfantSeat,
+                    ParentPassengerId = bookDto.ParentPassengerId
+                };
+
+                var seat = await _seatService.BookSeatAsync(id, bookSeatDto);
+                response.Result = seat;
+                response.Message = "Koltuğunuz başarıyla rezerve edildi";
+                return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return NotFound(response);
+            }
+            catch (InvalidOperationException ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error booking seat {SeatId} for self", id);
+                response.IsSuccess = false;
+                response.Message = "Koltuk rezerve edilirken hata oluştu";
+                return StatusCode(500, response);
+            }
+        }
+
 
         [HttpPut("{id}")]
         [Authorize(Policy = "AdminOnly")]

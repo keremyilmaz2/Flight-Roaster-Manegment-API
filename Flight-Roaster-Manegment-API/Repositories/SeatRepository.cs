@@ -35,6 +35,22 @@ namespace FlightRosterAPI.Repositories
                 .OrderBy(s => s.SeatNumber)
                 .ToListAsync();
         }
+        // SeatRepository implementation
+        // Repositories/SeatRepository.cs
+
+        public async Task<IEnumerable<Seat>> GetSeatsByPassengerAsync(int passengerId)
+        {
+            return await _context.Seats
+                .Include(s => s.Flight)
+                    .ThenInclude(f => f.Aircraft)  // ✅ Aircraft bilgisi
+                .Include(s => s.Passenger)
+                    .ThenInclude(p => p.User)
+                .Include(s => s.ParentPassenger)
+                    .ThenInclude(p => p.User)
+                .Where(s => s.PassengerId == passengerId)
+                .OrderByDescending(s => s.Flight.DepartureTime)  // Tarihe göre sırala
+                .ToListAsync();
+        }
 
         public async Task<IEnumerable<Seat>> GetAvailableSeatsByFlightAsync(int flightId)
         {

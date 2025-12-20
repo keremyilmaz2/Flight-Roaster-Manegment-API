@@ -1,8 +1,11 @@
-﻿using FlightRosterAPI.Models;
+﻿using Azure;
+using FlightRosterAPI.Models;
+using FlightRosterAPI.Models.DTOs.Passenger;
 using FlightRosterAPI.Models.DTOs.User;
 using FlightRosterAPI.Models.Entities;
 using FlightRosterAPI.Models.Enums;
 using FlightRosterAPI.Services.IServices;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -17,18 +20,21 @@ namespace FlightRosterAPI.Services
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
+        private readonly IPassengerService _passengerService;
         private readonly JwtSettings _jwtSettings;
 
         public UserService(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             RoleManager<IdentityRole<int>> roleManager,
+            IPassengerService passengerService,
             IOptions<JwtSettings> jwtSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
             _jwtSettings = jwtSettings.Value;
+            _passengerService = passengerService;
         }
 
         #region Authentication
@@ -106,6 +112,18 @@ namespace FlightRosterAPI.Services
             // Add user to role
             await _userManager.AddToRoleAsync(user, roleName);
 
+            if (user.Role == UserRole.Passenger)
+            {
+                var createPassengerDto = new CreatePassengerDto
+                {
+                    UserId = user.Id,
+                    // DTO'dan gelen değerleri kullan (eğer varsa)
+                    PassportNumber = registerDto.PassportNumber ?? string.Empty,
+                    NationalIdNumber = registerDto.NationalIdNumber ?? string.Empty
+                };
+
+                await _passengerService.CreatePassengerAsync(createPassengerDto);
+            }
             return MapToUserResponseDto(user);
         }
 
